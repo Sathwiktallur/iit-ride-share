@@ -21,21 +21,24 @@ import { Loader2 } from "lucide-react";
 export default function CreateRide() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  
+
   const form = useForm({
     resolver: zodResolver(insertRideSchema),
     defaultValues: {
       source: "",
       destination: "",
-      departureTime: "",
+      departureTime: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDThh:mm
       availableSeats: 1,
       costPerSeat: 0,
     },
   });
 
   const createRideMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/rides", data);
+    mutationFn: async (data) => {
+      const res = await apiRequest("POST", "/api/rides", {
+        ...data,
+        departureTime: new Date(data.departureTime).toISOString(),
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -58,11 +61,11 @@ export default function CreateRide() {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavHeader />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-4xl font-bold mb-8">Create a New Ride</h1>
-          
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit((data) => createRideMutation.mutate(data))} className="space-y-6">
               <FormField
@@ -100,7 +103,10 @@ export default function CreateRide() {
                   <FormItem>
                     <FormLabel>Departure Time</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input 
+                        type="datetime-local" 
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

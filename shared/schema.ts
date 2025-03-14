@@ -35,8 +35,18 @@ export const rideRatings = pgTable("ride_ratings", {
   review: text("review"),
 });
 
-export const insertUserSchema = createInsertSchema(users);
-export const insertRideSchema = createInsertSchema(rides).omit({ id: true, creatorId: true });
+export const insertUserSchema = createInsertSchema(users).extend({
+  username: z.string()
+    .min(1, "Username is required")
+    .regex(/^230041/, "Username must start with 230041")
+});
+
+export const insertRideSchema = createInsertSchema(rides)
+  .omit({ id: true, creatorId: true })
+  .extend({
+    departureTime: z.string().transform((str) => new Date(str))
+  });
+
 export const insertRideRequestSchema = createInsertSchema(rideRequests).omit({ id: true, userId: true });
 export const insertRideRatingSchema = createInsertSchema(rideRatings).omit({ id: true, userId: true });
 
