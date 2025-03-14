@@ -17,7 +17,9 @@ export const rides = pgTable("rides", {
   departureTime: timestamp("departure_time").notNull(),
   availableSeats: integer("available_seats").notNull(),
   costPerSeat: integer("cost_per_seat").notNull(),
-  status: text("status").notNull().default("active"),
+  status: text("status").notNull().default("pending"), // pending, active, completed
+  currentLocation: text("current_location"), // For real-time tracking
+  routeData: text("route_data"), // For storing Google Maps route data
 });
 
 export const rideRequests = pgTable("ride_requests", {
@@ -35,6 +37,14 @@ export const rideRatings = pgTable("ride_ratings", {
   review: text("review"),
 });
 
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  rideId: integer("ride_id").notNull(),
+  userId: integer("user_id").notNull(),
+  message: text("message").notNull(),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).extend({
   username: z.string()
     .min(1, "Username is required")
@@ -42,16 +52,18 @@ export const insertUserSchema = createInsertSchema(users).extend({
 });
 
 export const insertRideSchema = createInsertSchema(rides)
-  .omit({ id: true, creatorId: true })
+  .omit({ id: true, creatorId: true, status: true, currentLocation: true, routeData: true })
   .extend({
     departureTime: z.string().transform((str) => new Date(str))
   });
 
 export const insertRideRequestSchema = createInsertSchema(rideRequests).omit({ id: true, userId: true });
 export const insertRideRatingSchema = createInsertSchema(rideRatings).omit({ id: true, userId: true });
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, userId: true, timestamp: true });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Ride = typeof rides.$inferSelect;
 export type RideRequest = typeof rideRequests.$inferSelect;
 export type RideRating = typeof rideRatings.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;

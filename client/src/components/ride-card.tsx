@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { MapPin, Calendar, Users, IndianRupee, Loader2, Star } from "lucide-react";
+import { MapPin, Calendar, Users, IndianRupee, Loader2, Star, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import type { Ride, RideRequest } from "@shared/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import ChatBox from "./chat-box";
 
 type RideCardProps = {
   ride: Ride;
@@ -22,6 +23,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
   const { toast } = useToast();
   const [rating, setRating] = useState("5");
   const [review, setReview] = useState("");
+  const [showChat, setShowChat] = useState(false);
 
   const { data: requests } = useQuery<RideRequest[]>({
     queryKey: [`/api/rides/${ride.id}/requests`],
@@ -67,6 +69,24 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
     },
   });
 
+  const updateRideStatusMutation = useMutation({
+    mutationFn: async (status: string) => {
+      const res = await apiRequest(
+        "PATCH",
+        `/api/rides/${ride.id}/status`,
+        { status }
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/rides"] });
+      toast({
+        title: "Success",
+        description: "Ride status updated successfully",
+      });
+    },
+  });
+
   const rateRideMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/rides/${ride.id}/ratings`, {
@@ -99,15 +119,15 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
               <span className="mx-2">→</span>
               <span>{ride.destination}</span>
             </div>
-            {showStatus && (
-              <div className={`px-3 py-1 rounded-full text-sm ${
-                ride.status === 'active' 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-gray-100 text-gray-700'
-              }`}>
-                {ride.status}
-              </div>
-            )}
+            <div className={`px-3 py-1 rounded-full text-sm ${
+              ride.status === 'active' 
+                ? 'bg-green-100 text-green-700' 
+                : ride.status === 'completed'
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-gray-100 text-gray-700'
+            }`}>
+              {ride.status}
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4 text-sm">
@@ -161,10 +181,38 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
               ))}
             </div>
           )}
+
+          {showChat && <ChatBox rideId={ride.id} />}
         </div>
       </CardContent>
 
       <CardFooter className="pt-4 flex gap-2">
+        {isCreator && ride.status === 'pending' && (
+          <Button 
+            className="flex-1"
+            onClick={() => updateRideStatusMutation.mutate('active')}
+            disabled={updateRideStatusMutation.isPending}
+          >
+            {updateRideStatusMutation.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            Start Ride
+          </Button>
+        )}
+
+        {isCreator && ride.status === 'active' && (
+          <Button 
+            className="flex-1"
+            onClick={() => updateRideStatusMutation.mutate('completed')}
+            disabled={updateRideStatusMutation.isPending}
+          >
+            {updateRideStatusMutation.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            Complete Ride
+          </Button>
+        )}
+
         {!isCreator && ride.status === 'active' && (
           <Button 
             className="flex-1"
@@ -221,6 +269,15 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
               </div>
             </DialogContent>
           </Dialog>
+        )}
+
+        {(ride.status === 'active' || ride.status === 'pending') && (
+          <Button
+            variant="outline"
+            onClick={() => setShowChat(!showChat)}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </Button>
         )}
       </CardFooter>
     </Card>
