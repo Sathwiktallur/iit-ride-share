@@ -30,6 +30,8 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
     enabled: ride.creatorId === user?.id,
   });
 
+  const pendingRequests = requests?.filter(req => req.status === 'pending');
+
   const joinRideMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/rides/${ride.id}/requests`);
@@ -147,42 +149,49 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
             </div>
           </div>
 
-          {isCreator && requests && requests.length > 0 && (
-            <div className="mt-4 space-y-2">
-              <h3 className="font-semibold">Join Requests:</h3>
-              {requests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                  <span>User #{request.userId} - {request.status}</span>
-                  {request.status === 'pending' && (
-                    <div className="space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateRequestMutation.mutate({ 
-                          requestId: request.id, 
-                          status: 'accepted' 
-                        })}
-                      >
-                        Accept
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateRequestMutation.mutate({ 
-                          requestId: request.id, 
-                          status: 'rejected' 
-                        })}
-                      >
-                        Decline
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
+          {isCreator && pendingRequests && pendingRequests.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-semibold text-red-600">New Join Requests!</h3>
+                <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-sm">
+                  {pendingRequests.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {requests?.map((request) => (
+                  <div key={request.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span>User #{request.userId} - {request.status}</span>
+                    {request.status === 'pending' && (
+                      <div className="space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateRequestMutation.mutate({ 
+                            requestId: request.id, 
+                            status: 'accepted' 
+                          })}
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateRequestMutation.mutate({ 
+                            requestId: request.id, 
+                            status: 'rejected' 
+                          })}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          {showChat && <ChatBox rideId={ride.id} />}
+          {showChat && <ChatBox rideId={ride.id} isCreator={isCreator} />}
         </div>
       </CardContent>
 

@@ -8,9 +8,10 @@ import type { ChatMessage } from "@shared/schema";
 
 type ChatBoxProps = {
   rideId: number;
+  isCreator: boolean;
 };
 
-export default function ChatBox({ rideId }: ChatBoxProps) {
+export default function ChatBox({ rideId, isCreator }: ChatBoxProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -79,7 +80,9 @@ export default function ChatBox({ rideId }: ChatBoxProps) {
               <div
                 className={`max-w-[80%] rounded-lg p-3 ${
                   msg.userId === user?.id
-                    ? 'bg-primary text-primary-foreground'
+                    ? isCreator
+                      ? 'bg-green-100 text-green-900'
+                      : 'bg-blue-100 text-blue-900'
                     : 'bg-muted'
                 }`}
               >
