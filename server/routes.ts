@@ -23,8 +23,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const ride = await storage.createRide({
       ...parseResult.data,
       creatorId: req.user!.id,
+      status: 'active',
     });
     res.status(201).json(ride);
+  });
+
+  app.get("/api/rides/:rideId/requests", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const rideId = parseInt(req.params.rideId);
+    const ride = await storage.getRide(rideId);
+    if (!ride) return res.status(404).send("Ride not found");
+    if (ride.creatorId !== req.user!.id) return res.sendStatus(403);
+
+    const requests = await storage.getRideRequests(rideId);
+    res.json(requests);
   });
 
   app.post("/api/rides/:rideId/requests", async (req, res) => {
@@ -45,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const rideId = parseInt(req.params.rideId);
     const requestId = parseInt(req.params.requestId);
-    
+
     const ride = await storage.getRide(rideId);
     if (!ride) return res.status(404).send("Ride not found");
     if (ride.creatorId !== req.user!.id) return res.sendStatus(403);
