@@ -47,9 +47,9 @@ export default function AuthPage() {
       </div>
 
       <div 
-        className="hidden md:block bg-cover bg-center" 
-        style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1613033686187-191b2658d6bc)' }}
-      >
+      className="hidden md:block bg-cover bg-center w-full h-full" 
+      style={{ backgroundImage: 'url(https://convocation.iiti.ac.in/images/slider/Main%20Background.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+    >
         <div className="h-full w-full bg-black/40 p-12 flex items-center">
           <div className="text-white max-w-lg">
             <h2 className="text-3xl font-bold mb-4">Share Rides with Fellow Students</h2>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -24,15 +25,23 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
   const [rating, setRating] = useState("5");
   const [review, setReview] = useState("");
   const [showChat, setShowChat] = useState(false);
-  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [availableSeats, setAvailableSeats] = useState(ride.availableSeats);
 
-  const { data: requests } = useQuery<RideRequest[]>({
+  // Fetch join requests if the user is the ride creator
+  const { data: requests, refetch } = useQuery<RideRequest[]>({
     queryKey: [`/api/rides/${ride.id}/requests`],
     enabled: ride.creatorId === user?.id,
   });
 
+  useEffect(() => {
+    if (ride.creatorId === user?.id) {
+      refetch();
+    }
+  }, [user, ride.creatorId, refetch]);
+
   const pendingRequests = requests?.filter(req => req.status === 'pending');
 
+  // Mutation to request to join a ride
   const joinRideMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/rides/${ride.id}/requests`);
@@ -54,18 +63,21 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
     },
   });
 
+  // Mutation to accept or decline a join request
   const updateRequestMutation = useMutation({
     mutationFn: async ({ requestId, status }: { requestId: number; status: string }) => {
       const res = await apiRequest(
-        "PATCH",
+        "PATCH", 
         `/api/rides/${ride.id}/requests/${requestId}`,
         { status }
       );
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: [`/api/rides/${ride.id}/requests`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/rides"] });
+      if (variables.status === 'accepted') {
+        setAvailableSeats(prevSeats => prevSeats - 1);
+      }
       toast({
         title: "Success",
         description: "Request updated successfully",
@@ -73,6 +85,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
     },
   });
 
+  // Mutation to update the ride status
   const updateRideStatusMutation = useMutation({
     mutationFn: async (status: string) => {
       const res = await apiRequest(
@@ -91,6 +104,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
     },
   });
 
+  // Mutation to rate the ride
   const rateRideMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/rides/${ride.id}/ratings`, {
@@ -106,7 +120,6 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
       });
       setRating("5");
       setReview("");
-      setIsRatingDialogOpen(false);
     },
   });
 
@@ -114,24 +127,19 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
   const departureDate = new Date(ride.departureTime);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
+    <Card>
       <CardContent className="pt-6">
-        <div className="space-y-6">
+        <div className="grid gap-4">
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                <MapPin className="h-5 w-5 text-primary" />
-                <span>{ride.source}</span>
-                <span className="mx-2 text-gray-400">→</span>
-                <span>{ride.destination}</span>
-              </div>
-              <div className="mt-1 text-sm text-gray-500">
-                {format(departureDate, "EEEE, MMMM d 'at' h:mm a")}
-              </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-4 w-4" />
+              <span>{ride.source}</span>
+              <span className="mx-2">→</span>
+              <span>{ride.destination}</span>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-              ride.status === 'active'
-                ? 'bg-green-100 text-green-700'
+            <div className={`px-3 py-1 rounded-full text-sm ${
+              ride.status === 'active' 
+                ? 'bg-green-100 text-green-700' 
                 : ride.status === 'completed'
                 ? 'bg-blue-100 text-blue-700'
                 : 'bg-gray-100 text-gray-700'
@@ -140,42 +148,43 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-            <div className="text-center">
-              <Users className="h-5 w-5 mx-auto mb-1 text-gray-600" />
-              <div className="text-sm font-medium">{ride.availableSeats} seats</div>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>{format(departureDate, "PPp")}</span>
             </div>
-            <div className="text-center border-x border-gray-200">
-              <Calendar className="h-5 w-5 mx-auto mb-1 text-gray-600" />
-              <div className="text-sm font-medium">{format(departureDate, "MMM d")}</div>
+
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span>{availableSeats} seats available</span>
             </div>
-            <div className="text-center">
-              <IndianRupee className="h-5 w-5 mx-auto mb-1 text-gray-600" />
-              <div className="text-sm font-medium">₹{ride.costPerSeat}</div>
+
+            <div className="flex items-center gap-2">
+              <IndianRupee className="h-4 w-4 text-muted-foreground" />
+              <span>₹{ride.costPerSeat} per seat</span>
             </div>
           </div>
 
           {isCreator && pendingRequests && pendingRequests.length > 0 && (
-            <div className="border-t pt-4">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-2">
                 <h3 className="font-semibold text-red-600">New Join Requests!</h3>
                 <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-sm">
                   {pendingRequests.length}
                 </span>
               </div>
               <div className="space-y-2">
-                {requests?.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium">User #{request.userId}</span>
+                {pendingRequests.map((request) => (
+                  <div key={request.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span>User #{request.userId} - {request.status}</span>
                     {request.status === 'pending' && (
                       <div className="space-x-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="hover:bg-green-50 hover:text-green-700"
-                          onClick={() => updateRequestMutation.mutate({
-                            requestId: request.id,
-                            status: 'accepted'
+                          onClick={() => updateRequestMutation.mutate({ 
+                            requestId: request.id, 
+                            status: 'accepted' 
                           })}
                         >
                           Accept
@@ -183,10 +192,9 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="hover:bg-red-50 hover:text-red-700"
-                          onClick={() => updateRequestMutation.mutate({
-                            requestId: request.id,
-                            status: 'rejected'
+                          onClick={() => updateRequestMutation.mutate({ 
+                            requestId: request.id, 
+                            status: 'rejected' 
                           })}
                         >
                           Decline
@@ -203,9 +211,9 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="pt-4 flex gap-2 border-t">
+      <CardFooter className="pt-4 flex gap-2">
         {isCreator && ride.status === 'pending' && (
-          <Button
+          <Button 
             className="flex-1"
             onClick={() => updateRideStatusMutation.mutate('active')}
             disabled={updateRideStatusMutation.isPending}
@@ -218,7 +226,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
         )}
 
         {isCreator && ride.status === 'active' && (
-          <Button
+          <Button 
             className="flex-1"
             onClick={() => updateRideStatusMutation.mutate('completed')}
             disabled={updateRideStatusMutation.isPending}
@@ -230,8 +238,8 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
           </Button>
         )}
 
-        {!isCreator && ride.status === 'active' && (
-          <Button
+        {!isCreator && (ride.status === 'pending' || ride.status === 'active') && (
+          <Button 
             className="flex-1"
             onClick={() => joinRideMutation.mutate()}
             disabled={joinRideMutation.isPending}
@@ -244,7 +252,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
         )}
 
         {!isCreator && ride.status === 'completed' && (
-          <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
+          <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex-1">
                 <Star className="mr-2 h-4 w-4" />
@@ -273,7 +281,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
                     onChange={(e) => setReview(e.target.value)}
                   />
                 </div>
-                <Button
+                <Button 
                   className="w-full"
                   onClick={() => rateRideMutation.mutate()}
                   disabled={rateRideMutation.isPending}
