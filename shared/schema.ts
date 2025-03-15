@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
 });
@@ -46,9 +46,10 @@ export const chatMessages = pgTable("chat_messages", {
 });
 
 export const insertUserSchema = createInsertSchema(users).extend({
-  username: z.string()
-    .min(1, "Username is required")
-    .regex(/^230041/, "Username must start with 230041")
+  email: z.string()
+    .min(1, "Email is required")
+    .email("Invalid email format")
+    .refine((email) => email.endsWith("@iiti.ac.in"), "Must be an IIT Indore email address"),
 });
 
 export const insertRideSchema = createInsertSchema(rides)

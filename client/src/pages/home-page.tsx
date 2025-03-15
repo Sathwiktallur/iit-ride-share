@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import NavHeader from "@/components/nav-header";
 import SearchRides from "@/components/search-rides";
 import RideCard from "@/components/ride-card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield, Clock, Users } from "lucide-react";
 import type { Ride } from "@shared/schema";
 
 export default function HomePage() {
@@ -70,6 +70,60 @@ export default function HomePage() {
           )}
         </div>
       </main>
+
+      <section className="bg-white py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Why Choose IIT Indore Ride Share?</h2>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center p-6 rounded-lg bg-gray-50">
+              <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-xl mb-2">Verified Students</h3>
+              <p className="text-gray-600">
+                All users are verified IIT Indore students, ensuring a safe and trusted community.
+              </p>
+            </div>
+
+            <div className="text-center p-6 rounded-lg bg-gray-50">
+              <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-xl mb-2">Real-time Updates</h3>
+              <p className="text-gray-600">
+                Get instant notifications about ride status and chat with fellow travelers.
+              </p>
+            </div>
+
+            <div className="text-center p-6 rounded-lg bg-gray-50">
+              <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-xl mb-2">Community Driven</h3>
+              <p className="text-gray-600">
+                Share rides with your peers and make travel more affordable and sustainable.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-2xl font-bold mb-4">About IIT Indore Ride Share</h2>
+            <p className="text-gray-400 mb-8">
+              A student-driven initiative to make travel easier, more affordable, and more sustainable
+              for the IIT Indore community. Connect with fellow students, share rides, and reduce your
+              carbon footprint while saving money.
+            </p>
+            <p className="text-sm text-gray-500">
+              © {new Date().getFullYear()} IIT Indore Ride Share. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
