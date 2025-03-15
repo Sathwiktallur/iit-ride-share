@@ -56,7 +56,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
   const updateRequestMutation = useMutation({
     mutationFn: async ({ requestId, status }: { requestId: number; status: string }) => {
       const res = await apiRequest(
-        "PATCH", 
+        "PATCH",
         `/api/rides/${ride.id}/requests/${requestId}`,
         { status }
       );
@@ -111,19 +111,24 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
   const departureDate = new Date(ride.departureTime);
 
   return (
-    <Card>
+    <Card className="hover:shadow-lg transition-shadow duration-200">
       <CardContent className="pt-6">
-        <div className="grid gap-4">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>{ride.source}</span>
-              <span className="mx-2">→</span>
-              <span>{ride.destination}</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 text-lg font-semibold">
+                <MapPin className="h-5 w-5 text-primary" />
+                <span>{ride.source}</span>
+                <span className="mx-2 text-gray-400">→</span>
+                <span>{ride.destination}</span>
+              </div>
+              <div className="mt-1 text-sm text-gray-500">
+                {format(departureDate, "EEEE, MMMM d 'at' h:mm a")}
+              </div>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm ${
-              ride.status === 'active' 
-                ? 'bg-green-100 text-green-700' 
+            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              ride.status === 'active'
+                ? 'bg-green-100 text-green-700'
                 : ride.status === 'completed'
                 ? 'bg-blue-100 text-blue-700'
                 : 'bg-gray-100 text-gray-700'
@@ -132,26 +137,24 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>{format(departureDate, "PPp")}</span>
+          <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <Users className="h-5 w-5 mx-auto mb-1 text-gray-600" />
+              <div className="text-sm font-medium">{ride.availableSeats} seats</div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span>{ride.availableSeats} seats available</span>
+            <div className="text-center border-x border-gray-200">
+              <Calendar className="h-5 w-5 mx-auto mb-1 text-gray-600" />
+              <div className="text-sm font-medium">{format(departureDate, "MMM d")}</div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <IndianRupee className="h-4 w-4 text-muted-foreground" />
-              <span>₹{ride.costPerSeat} per seat</span>
+            <div className="text-center">
+              <IndianRupee className="h-5 w-5 mx-auto mb-1 text-gray-600" />
+              <div className="text-sm font-medium">₹{ride.costPerSeat}</div>
             </div>
           </div>
 
           {isCreator && pendingRequests && pendingRequests.length > 0 && (
-            <div className="mt-4">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="border-t pt-4">
+              <div className="flex items-center gap-2 mb-3">
                 <h3 className="font-semibold text-red-600">New Join Requests!</h3>
                 <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-sm">
                   {pendingRequests.length}
@@ -159,16 +162,17 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
               </div>
               <div className="space-y-2">
                 {requests?.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <span>User #{request.userId} - {request.status}</span>
+                  <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium">User #{request.userId}</span>
                     {request.status === 'pending' && (
                       <div className="space-x-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => updateRequestMutation.mutate({ 
-                            requestId: request.id, 
-                            status: 'accepted' 
+                          className="hover:bg-green-50 hover:text-green-700"
+                          onClick={() => updateRequestMutation.mutate({
+                            requestId: request.id,
+                            status: 'accepted'
                           })}
                         >
                           Accept
@@ -176,9 +180,10 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => updateRequestMutation.mutate({ 
-                            requestId: request.id, 
-                            status: 'rejected' 
+                          className="hover:bg-red-50 hover:text-red-700"
+                          onClick={() => updateRequestMutation.mutate({
+                            requestId: request.id,
+                            status: 'rejected'
                           })}
                         >
                           Decline
@@ -195,9 +200,9 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="pt-4 flex gap-2">
+      <CardFooter className="pt-4 flex gap-2 border-t">
         {isCreator && ride.status === 'pending' && (
-          <Button 
+          <Button
             className="flex-1"
             onClick={() => updateRideStatusMutation.mutate('active')}
             disabled={updateRideStatusMutation.isPending}
@@ -210,7 +215,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
         )}
 
         {isCreator && ride.status === 'active' && (
-          <Button 
+          <Button
             className="flex-1"
             onClick={() => updateRideStatusMutation.mutate('completed')}
             disabled={updateRideStatusMutation.isPending}
@@ -223,7 +228,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
         )}
 
         {!isCreator && ride.status === 'active' && (
-          <Button 
+          <Button
             className="flex-1"
             onClick={() => joinRideMutation.mutate()}
             disabled={joinRideMutation.isPending}
@@ -265,7 +270,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
                     onChange={(e) => setReview(e.target.value)}
                   />
                 </div>
-                <Button 
+                <Button
                   className="w-full"
                   onClick={() => rateRideMutation.mutate()}
                   disabled={rateRideMutation.isPending}

@@ -28,14 +28,21 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <NavHeader />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8">Available Rides</h1>
+      <div className="bg-primary text-white py-16">
+        <div className="container mx-auto px-4">
+          <h1 className="text-4xl font-bold mb-6">
+            Share your ride with IIT Indore students
+          </h1>
+          <p className="text-xl opacity-90 mb-8">
+            Find trusted rides or share your journey with fellow students
+          </p>
+          <SearchRides onSearch={setSearchCriteria} />
+        </div>
+      </div>
 
-          <SearchRides 
-            className="mb-8" 
-            onSearch={setSearchCriteria}
-          />
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-semibold mb-6">Available Rides</h2>
 
           {isLoading ? (
             <div className="flex justify-center py-12">
@@ -46,11 +53,16 @@ export default function HomePage() {
               Failed to load rides. Please try again later.
             </div>
           ) : !filteredRides?.length ? (
-            <div className="text-center py-12 text-gray-500">
-              No rides available at the moment.
+            <div className="text-center py-12 bg-white rounded-lg shadow">
+              <p className="text-gray-500 text-lg">
+                No rides available for this route.
+              </p>
+              <p className="text-gray-400">
+                Try different locations or create a new ride!
+              </p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="space-y-4">
               {filteredRides.map((ride) => (
                 <RideCard key={ride.id} ride={ride} />
               ))}
