@@ -80,6 +80,13 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  async updateRide(id: number, updatedRide: Ride): Promise<Ride> {
+    const ride = this.rides.get(id);
+    if (!ride) throw new Error("Ride not found");
+    this.rides.set(id, updatedRide);
+    return updatedRide;
+  }
+
   async createRideRequest(request: Omit<RideRequest, "id">): Promise<RideRequest> {
     const id = this.currentId++;
     const newRequest = { ...request, id };

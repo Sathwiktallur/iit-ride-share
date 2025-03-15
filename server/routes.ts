@@ -124,6 +124,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!ride) return res.status(404).send("Ride not found");
     if (ride.creatorId !== req.user!.id) return res.sendStatus(403);
 
+    // If accepting request, decrease available seats
+    if (req.body.status === 'accepted') {
+      if (ride.availableSeats <= 0) {
+        return res.status(400).json({ message: "No seats available" });
+      }
+      await storage.updateRide(rideId, {
+        ...ride,
+        availableSeats: ride.availableSeats - 1
+      });
+    }
+
     const updatedRequest = await storage.updateRideRequestStatus(
       requestId,
       req.body.status

@@ -23,7 +23,7 @@ export default function SearchRides({ className, onSearch }: SearchRidesProps) {
         <div className="relative">
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <Input
-            className="pl-10"
+            className="pl-10 text-gray-900 bg-white"
             placeholder="Leaving from..."
             value={source}
             onChange={(e) => setSource(e.target.value)}
@@ -33,7 +33,7 @@ export default function SearchRides({ className, onSearch }: SearchRidesProps) {
         <div className="relative">
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <Input
-            className="pl-10"
+            className="pl-10 text-gray-900 bg-white"
             placeholder="Going to..."
             value={destination}
             onChange={(e) => setDestination(e.target.value)}

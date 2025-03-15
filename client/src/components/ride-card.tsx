@@ -24,6 +24,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
   const [rating, setRating] = useState("5");
   const [review, setReview] = useState("");
   const [showChat, setShowChat] = useState(false);
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
 
   const { data: requests } = useQuery<RideRequest[]>({
     queryKey: [`/api/rides/${ride.id}/requests`],
@@ -64,6 +65,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/rides/${ride.id}/requests`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/rides"] });
       toast({
         title: "Success",
         description: "Request updated successfully",
@@ -104,6 +106,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
       });
       setRating("5");
       setReview("");
+      setIsRatingDialogOpen(false);
     },
   });
 
@@ -241,7 +244,7 @@ export default function RideCard({ ride, showStatus = false }: RideCardProps) {
         )}
 
         {!isCreator && ride.status === 'completed' && (
-          <Dialog>
+          <Dialog open={isRatingDialogOpen} onOpenChange={setIsRatingDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex-1">
                 <Star className="mr-2 h-4 w-4" />
